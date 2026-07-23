@@ -15,6 +15,7 @@ interface CustomClaims {
   app_role?: string
   school_id?: string
   permissions?: string[]
+  must_change_password?: boolean
 }
 
 function decodeJwtClaims(accessToken: string): CustomClaims {
@@ -25,6 +26,7 @@ function decodeJwtClaims(accessToken: string): CustomClaims {
       app_role: decoded.app_role,
       school_id: decoded.school_id,
       permissions: decoded.permissions,
+      must_change_password: decoded.must_change_password,
     }
   } catch {
     return {}
@@ -70,12 +72,22 @@ export async function middleware(request: NextRequest) {
   }
 
   const claims = decodeJwtClaims(session.access_token)
-  console.log('DEBUG claims:', JSON.stringify(claims), 'pathname:', pathname)
 
   if (!claims.school_id || !claims.app_role) {
     return NextResponse.redirect(
       new URL('/erreur-acces?raison=profil-incomplet', request.url)
     )
+  }
+
+  if (pathname === '/changer-mot-de-passe') {
+    if (claims.must_change_password) {
+      return response
+    }
+    return NextResponse.redirect(new URL('/tableau-de-bord', request.url))
+  }
+
+  if (claims.must_change_password) {
+    return NextResponse.redirect(new URL('/changer-mot-de-passe', request.url))
   }
 
   if (pathname === '/') {
