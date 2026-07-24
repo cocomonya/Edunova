@@ -15,7 +15,7 @@ export default function ToggleActiveButton({
   return (
     <button
       disabled={isPending}
-      onClick={() => startTransition(() => toggleUserActive(userId, !isActive))}
+      onClick={() => startTransition(() => { toggleUserActive(userId, !isActive) })}
       className="text-xs px-2 py-1 rounded border border-slate-300 text-slate-600 disabled:opacity-40"
     >
       {isActive ? 'Desactiver' : 'Reactiver'}

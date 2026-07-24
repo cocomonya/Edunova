@@ -24,7 +24,7 @@ export default function StatusActions({
         <button
           key={s.value}
           disabled={isPending || currentStatus === s.value}
-          onClick={() => startTransition(() => changeStudentStatus(studentId, s.value))}
+          onClick={() => startTransition(() => { changeStudentStatus(studentId, s.value) })}
           className={`text-xs px-3 py-1.5 rounded border font-medium disabled:opacity-40 ${
             currentStatus === s.value ? s.color : 'bg-white text-slate-500 border-slate-200'
           }`}
