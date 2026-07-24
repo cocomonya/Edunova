@@ -14,15 +14,11 @@ export default async function NouvelElevePage() {
     .eq('id', userData.user.id)
     .single()
 
-  console.log('DEBUG profile:', JSON.stringify(profile))
-
-  const { data: classes, error: classesError } = await supabase
+  const { data: classes } = await supabase
     .from('classes')
     .select('id, name, niveau')
     .eq('school_id', profile?.school_id)
     .order('name')
-
-  console.log('DEBUG classes:', JSON.stringify(classes), 'error:', JSON.stringify(classesError))
 
   return (
     <div className="min-h-screen bg-slate-50 p-8">
