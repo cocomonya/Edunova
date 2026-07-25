@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import StudentEditForm from './student-edit-form'
 import StatusActions from './status-actions'
+import ParentsClient from './parents-client'
 
 export default async function ElevePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -12,7 +13,7 @@ export default async function ElevePage({ params }: { params: Promise<{ id: stri
 
   const { data: student } = await supabase
     .from('students')
-    .select('id, matricule, first_name, last_name, date_naissance, lieu_naissance, adresse, acte_naissance_numero, guardian_name, guardian_phone, status')
+    .select('id, matricule, first_name, post_nom, last_name, sexe, date_naissance, lieu_naissance, adresse, acte_naissance_numero, guardian_name, guardian_phone, guardian_address, emergency_contact_name, emergency_contact_relation, emergency_contact_phone, status, school_id')
     .eq('id', id)
     .single()
 
@@ -26,12 +27,36 @@ export default async function ElevePage({ params }: { params: Promise<{ id: stri
     .limit(1)
     .maybeSingle()
 
+  const { data: linkedRows } = await supabase
+    .from('parent_students')
+    .select('id, parent_id, users:parent_id ( full_name )')
+    .eq('student_id', id)
+
+  const linkedParents = (linkedRows ?? []).map((r: any) => ({
+    id: r.id,
+    parent_id: r.parent_id,
+    full_name: r.users?.full_name ?? 'Inconnu',
+  }))
+
+  const linkedIds = new Set(linkedParents.map((p) => p.parent_id))
+
+  const { data: allParents } = await supabase
+    .from('users')
+    .select('id, full_name, roles!inner ( slug )')
+    .eq('school_id', student.school_id)
+    .eq('roles.slug', 'parent')
+    .eq('is_active', true)
+
+  const availableParents = (allParents ?? [])
+    .filter((p: any) => !linkedIds.has(p.id))
+    .map((p: any) => ({ id: p.id, full_name: p.full_name }))
+
   return (
     <div className="min-h-screen bg-slate-50 p-8">
       <div className="max-w-lg mx-auto">
         <div className="flex items-center justify-between mb-2">
           <h1 className="text-xl font-semibold text-slate-900">
-            {student.first_name} {student.last_name}
+            {student.first_name} {student.post_nom} {student.last_name}
           </h1>
           <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">
             {student.matricule}
@@ -42,6 +67,15 @@ export default async function ElevePage({ params }: { params: Promise<{ id: stri
         </p>
 
         <StatusActions studentId={student.id} currentStatus={student.status} />
+
+        <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mt-6 mb-2">
+          Parents
+        </h2>
+        <ParentsClient
+          studentId={student.id}
+          linkedParents={linkedParents}
+          availableParents={availableParents}
+        />
 
         <div className="mt-6">
           <StudentEditForm student={student} />

@@ -111,3 +111,54 @@ export async function toggleUserActive(userId: string, isActive: boolean) {
   revalidatePath('/utilisateurs')
   return { success: true }
 }
+
+export interface ResetPasswordState {
+  error?: string
+  tempPassword?: string
+}
+
+export async function resetUserPassword(userId: string): Promise<ResetPasswordState> {
+  const supabase = await createClient()
+  const { data: userData } = await supabase.auth.getUser()
+  if (!userData.user) {
+    return { error: 'Non authentifie' }
+  }
+
+  const { data: actorProfile } = await supabase
+    .from('users')
+    .select('school_id')
+    .eq('id', userData.user.id)
+    .single()
+
+  const { data: targetProfile } = await supabase
+    .from('users')
+    .select('school_id')
+    .eq('id', userId)
+    .single()
+
+  if (!actorProfile || !targetProfile || actorProfile.school_id !== targetProfile.school_id) {
+    return { error: 'Utilisateur introuvable' }
+  }
+
+  const tempPassword = generateTempPassword()
+  const admin = createAdminClient()
+
+  const { error: authError } = await admin.auth.admin.updateUserById(userId, {
+    password: tempPassword,
+  })
+
+  if (authError) {
+    return { error: authError.message }
+  }
+
+  const { error: profileError } = await admin
+    .from('users')
+    .update({ must_change_password: true })
+    .eq('id', userId)
+
+  if (profileError) {
+    return { error: 'Mot de passe reinitialise mais erreur de mise a jour du profil.' }
+  }
+
+  return { tempPassword }
+}

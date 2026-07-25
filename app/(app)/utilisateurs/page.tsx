@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import ToggleActiveButton from './toggle-active-button'
 
 export default async function UtilisateursPage() {
   const supabase = await createClient()
@@ -10,8 +9,27 @@ export default async function UtilisateursPage() {
 
   const { data: users } = await supabase
     .from('users')
-    .select('id, full_name, email, is_active, roles ( name )')
+    .select('id, full_name, email, is_active, roles ( slug, name )')
     .order('created_at', { ascending: false })
+
+  const personnel = (users ?? []).filter((u: any) => u.roles?.slug !== 'parent')
+  const parents = (users ?? []).filter((u: any) => u.roles?.slug === 'parent')
+
+  function UserRow(u: any) {
+    return (
+      <Link key={u.id} href={`/utilisateurs/${u.id}`} className="block p-4 hover:bg-slate-50">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-slate-900">{u.full_name}</p>
+            <p className="text-xs text-slate-500">{u.email} - {u.roles?.name}</p>
+          </div>
+          <span className={`text-xs px-2 py-0.5 rounded ${u.is_active ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+            {u.is_active ? 'Actif' : 'Desactive'}
+          </span>
+        </div>
+      </Link>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 p-8">
@@ -26,23 +44,19 @@ export default async function UtilisateursPage() {
           </Link>
         </div>
 
+        <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">Personnel</h2>
+        <div className="bg-white rounded-lg border border-slate-200 divide-y divide-slate-100 mb-6">
+          {personnel.map((u: any) => UserRow(u))}
+          {personnel.length === 0 && (
+            <p className="p-4 text-slate-400 text-sm">Aucun membre du personnel.</p>
+          )}
+        </div>
+
+        <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">Parents</h2>
         <div className="bg-white rounded-lg border border-slate-200 divide-y divide-slate-100">
-          {users?.map((u: any) => (
-            <div key={u.id} className="p-4 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-900">{u.full_name}</p>
-                <p className="text-xs text-slate-500">{u.email} - {u.roles?.name}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className={`text-xs px-2 py-0.5 rounded ${u.is_active ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
-                  {u.is_active ? 'Actif' : 'Desactive'}
-                </span>
-                <ToggleActiveButton userId={u.id} isActive={u.is_active} />
-              </div>
-            </div>
-          ))}
-          {(!users || users.length === 0) && (
-            <p className="p-4 text-slate-400 text-sm">Aucun utilisateur.</p>
+          {parents.map((u: any) => UserRow(u))}
+          {parents.length === 0 && (
+            <p className="p-4 text-slate-400 text-sm">Aucun parent.</p>
           )}
         </div>
       </div>

@@ -27,14 +27,14 @@ export default async function ClassesPage() {
 
         <div className="bg-white rounded-lg border border-slate-200 divide-y divide-slate-100">
           {classes?.map((c: any) => (
-            <div key={c.id} className="p-4">
+            <Link key={c.id} href={`/classes/${c.id}`} className="block p-4 hover:bg-slate-50">
               <p className="text-sm font-medium text-slate-900">
                 {c.niveau}{c.local ? ` - Local ${c.local}` : ''}
               </p>
               <p className="text-xs text-slate-500">
                 Titulaire : {c.users?.full_name ?? 'Non assigne'}
               </p>
-            </div>
+            </Link>
           ))}
           {(!classes || classes.length === 0) && (
             <p className="p-4 text-slate-400 text-sm">Aucune classe pour le moment.</p>

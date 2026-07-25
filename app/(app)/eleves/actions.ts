@@ -15,13 +15,19 @@ export async function createStudent(
 ): Promise<CreateStudentState> {
   const parsed = studentSchema.safeParse({
     first_name: formData.get('first_name'),
+    post_nom: formData.get('post_nom'),
     last_name: formData.get('last_name'),
+    sexe: formData.get('sexe'),
     date_naissance: formData.get('date_naissance'),
     lieu_naissance: formData.get('lieu_naissance'),
     adresse: formData.get('adresse'),
     acte_naissance_numero: formData.get('acte_naissance_numero'),
     guardian_name: formData.get('guardian_name'),
     guardian_phone: formData.get('guardian_phone'),
+    guardian_address: formData.get('guardian_address'),
+    emergency_contact_name: formData.get('emergency_contact_name'),
+    emergency_contact_relation: formData.get('emergency_contact_relation'),
+    emergency_contact_phone: formData.get('emergency_contact_phone'),
     class_id: formData.get('class_id'),
   })
 
@@ -69,6 +75,12 @@ export async function createStudent(
     p_guardian_phone: parsed.data.guardian_phone || null,
     p_class_id: parsed.data.class_id,
     p_academic_year_id: academicYear.id,
+    p_post_nom: parsed.data.post_nom || null,
+    p_sexe: parsed.data.sexe || null,
+    p_guardian_address: parsed.data.guardian_address || null,
+    p_emergency_contact_name: parsed.data.emergency_contact_name || null,
+    p_emergency_contact_relation: parsed.data.emergency_contact_relation || null,
+    p_emergency_contact_phone: parsed.data.emergency_contact_phone || null,
   })
 
   if (error) {

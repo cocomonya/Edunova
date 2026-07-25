@@ -1,7 +1,6 @@
 'use server'
 
 import { z } from 'zod'
-import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
 const schema = z.object({
@@ -14,6 +13,7 @@ const schema = z.object({
 
 export interface ChangePasswordState {
   error?: string
+  success?: boolean
 }
 
 export async function changePassword(
@@ -53,7 +53,7 @@ export async function changePassword(
     return { error: authError.message }
   }
 
-  await supabase.auth.refreshSession()
+  await supabase.auth.signOut()
 
-  redirect('/tableau-de-bord')
+  return { success: true }
 }
