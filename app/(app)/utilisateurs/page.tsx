@@ -12,10 +12,16 @@ export default async function UtilisateursPage() {
     .select('id, full_name, email, is_active, roles ( slug, name )')
     .order('created_at', { ascending: false })
 
+  const { data: linkedRows } = await supabase
+    .from('parent_students')
+    .select('parent_id')
+
+  const linkedParentIds = new Set((linkedRows ?? []).map((r) => r.parent_id))
+
   const personnel = (users ?? []).filter((u: any) => u.roles?.slug !== 'parent')
   const parents = (users ?? []).filter((u: any) => u.roles?.slug === 'parent')
 
-  function UserRow(u: any) {
+  function UserRow(u: any, showLinkBadge: boolean) {
     return (
       <Link key={u.id} href={`/utilisateurs/${u.id}`} className="block p-4 hover:bg-slate-50">
         <div className="flex items-center justify-between">
@@ -23,9 +29,18 @@ export default async function UtilisateursPage() {
             <p className="text-sm font-medium text-slate-900">{u.full_name}</p>
             <p className="text-xs text-slate-500">{u.email} - {u.roles?.name}</p>
           </div>
-          <span className={`text-xs px-2 py-0.5 rounded ${u.is_active ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
-            {u.is_active ? 'Actif' : 'Desactive'}
-          </span>
+          <div className="flex items-center gap-2">
+            {showLinkBadge && (
+              linkedParentIds.has(u.id) ? (
+                <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded">Lie</span>
+              ) : (
+                <span className="text-xs bg-red-50 text-red-600 px-2 py-0.5 rounded">Non lie</span>
+              )
+            )}
+            <span className={`text-xs px-2 py-0.5 rounded ${u.is_active ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+              {u.is_active ? 'Actif' : 'Desactive'}
+            </span>
+          </div>
         </div>
       </Link>
     )
@@ -46,7 +61,7 @@ export default async function UtilisateursPage() {
 
         <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">Personnel</h2>
         <div className="bg-white rounded-lg border border-slate-200 divide-y divide-slate-100 mb-6">
-          {personnel.map((u: any) => UserRow(u))}
+          {personnel.map((u: any) => UserRow(u, false))}
           {personnel.length === 0 && (
             <p className="p-4 text-slate-400 text-sm">Aucun membre du personnel.</p>
           )}
@@ -54,7 +69,7 @@ export default async function UtilisateursPage() {
 
         <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">Parents</h2>
         <div className="bg-white rounded-lg border border-slate-200 divide-y divide-slate-100">
-          {parents.map((u: any) => UserRow(u))}
+          {parents.map((u: any) => UserRow(u, true))}
           {parents.length === 0 && (
             <p className="p-4 text-slate-400 text-sm">Aucun parent.</p>
           )}

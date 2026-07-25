@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import AssignmentsClient from './assignments-client'
@@ -43,9 +44,16 @@ export default async function ClasseDetailPage({ params }: { params: Promise<{ c
         <h1 className="text-xl font-semibold text-slate-900 mb-1">
           {classe.niveau}{classe.local ? ` - Local ${classe.local}` : ''}
         </h1>
-        <p className="text-sm text-slate-500 mb-6">
+        <p className="text-sm text-slate-500 mb-4">
           Titulaire : {(classe.users as any)?.full_name ?? 'Non assigne'}
         </p>
+
+        <Link
+          href={`/eleves?classe=${classId}`}
+          className="inline-block mb-6 text-sm bg-slate-900 text-white px-4 py-2 rounded font-medium"
+        >
+          Voir les eleves de cette classe
+        </Link>
 
         <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">
           Enseignants par matiere

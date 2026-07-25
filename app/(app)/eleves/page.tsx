@@ -1,29 +1,72 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import ClassFilter from './class-filter'
 
-export default async function ElevesPage() {
+export default async function ElevesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ classe?: string }>
+}) {
+  const { classe } = await searchParams
   const supabase = await createClient()
 
   const { data: userData } = await supabase.auth.getUser()
   if (!userData.user) redirect('/connexion')
 
-  const { data: students } = await supabase
+  const { data: profile } = await supabase
+    .from('users')
+    .select('school_id')
+    .eq('id', userData.user.id)
+    .single()
+
+  const { data: classes } = await supabase
+    .from('classes')
+    .select('id, niveau, local')
+    .eq('school_id', profile?.school_id)
+    .order('niveau')
+
+  let query = supabase
     .from('enrollments')
-    .select('id, status, students ( id, matricule, first_name, last_name, status ), classes ( name, niveau )')
+    .select(`
+      id,
+      class_id,
+      students ( id, matricule, first_name, last_name, status ),
+      classes ( name, niveau )
+    `)
     .order('created_at', { ascending: true })
+
+  if (classe) {
+    query = query.eq('class_id', classe)
+  }
+
+  const { data: enrollments } = await query
+
+  const { data: linkedRows } = await supabase
+    .from('parent_students')
+    .select('student_id')
+
+  const linkedStudentIds = new Set((linkedRows ?? []).map((r) => r.student_id))
+
+  const currentClass = classes?.find((c) => c.id === classe)
 
   return (
     <div className="min-h-screen bg-slate-50 p-8">
       <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-xl font-semibold text-slate-900">Élèves</h1>
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-xl font-semibold text-slate-900">
+            Eleves{currentClass ? ` - ${currentClass.niveau}${currentClass.local ? ` Local ${currentClass.local}` : ''}` : ''}
+          </h1>
           <Link
             href="/eleves/nouveau"
             className="bg-slate-900 text-white text-sm px-4 py-2 rounded font-medium"
           >
-            + Nouvel élève
+            + Nouvel eleve
           </Link>
+        </div>
+
+        <div className="mb-4">
+          <ClassFilter classes={classes ?? []} currentClasse={classe ?? ''} />
         </div>
 
         <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
@@ -34,15 +77,19 @@ export default async function ElevesPage() {
                 <th className="text-left px-4 py-2 font-medium text-slate-600">Nom</th>
                 <th className="text-left px-4 py-2 font-medium text-slate-600">Classe</th>
                 <th className="text-left px-4 py-2 font-medium text-slate-600">Statut</th>
+                <th className="text-left px-4 py-2 font-medium text-slate-600">Parent</th>
               </tr>
             </thead>
             <tbody>
-              {students?.map((e: any) => (
-                <tr key={e.id} className="border-b border-slate-100 last:border-0">
-                  <td className="px-4 py-2 text-slate-500">{e.students?.matricule}</td>
-                  <td className="px-4 py-2">
-                    <a href={`/eleves/${e.students?.id}`} className="text-slate-900 hover:underline">
-                    {e.students?.first_name} {e.students?.last_name}</a>
+              {enrollments?.map((e: any) => (
+                <tr key={e.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
+                  <td className="px-4 py-2 text-slate-500">
+                    <Link href={`/eleves/${e.students?.id}`}>{e.students?.matricule}</Link>
+                  </td>
+                  <td className="px-4 py-2 text-slate-900">
+                    <Link href={`/eleves/${e.students?.id}`}>
+                      {e.students?.first_name} {e.students?.last_name}
+                    </Link>
                   </td>
                   <td className="px-4 py-2 text-slate-600">
                     {e.classes?.name} ({e.classes?.niveau})
@@ -52,12 +99,19 @@ export default async function ElevesPage() {
                       {e.students?.status}
                     </span>
                   </td>
+                  <td className="px-4 py-2">
+                    {linkedStudentIds.has(e.students?.id) ? (
+                      <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded">Lie</span>
+                    ) : (
+                      <span className="text-xs bg-red-50 text-red-600 px-2 py-0.5 rounded">Non lie</span>
+                    )}
+                  </td>
                 </tr>
               ))}
-              {(!students || students.length === 0) && (
+              {(!enrollments || enrollments.length === 0) && (
                 <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-slate-400">
-                    Aucun élève enregistré
+                  <td colSpan={5} className="px-4 py-8 text-center text-slate-400">
+                    Aucun eleve trouve
                   </td>
                 </tr>
               )}
