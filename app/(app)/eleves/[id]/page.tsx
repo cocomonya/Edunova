@@ -1,8 +1,14 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
-import StudentEditForm from './student-edit-form'
-import StatusActions from './status-actions'
+import StudentDetail from './student-detail'
 import ParentsClient from './parents-client'
+
+const STATUS_LABELS: Record<string, string> = {
+  actif: 'Actif',
+  archive: 'Archive',
+  transfere: 'Transfere',
+  diplome: 'Diplome',
+}
 
 export default async function ElevePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -63,10 +69,10 @@ export default async function ElevePage({ params }: { params: Promise<{ id: stri
           </span>
         </div>
         <p className="text-sm text-slate-500 mb-6">
-          {(enrollment?.classes as any)?.name ?? 'Aucune classe'} - Statut : {student.status}
+          {(enrollment?.classes as any)?.name ?? 'Aucune classe'} - Statut : {STATUS_LABELS[student.status] ?? student.status}
         </p>
 
-        <StatusActions studentId={student.id} currentStatus={student.status} />
+        <StudentDetail student={student} />
 
         <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mt-6 mb-2">
           Parents
@@ -76,10 +82,6 @@ export default async function ElevePage({ params }: { params: Promise<{ id: stri
           linkedParents={linkedParents}
           availableParents={availableParents}
         />
-
-        <div className="mt-6">
-          <StudentEditForm student={student} />
-        </div>
       </div>
     </div>
   )

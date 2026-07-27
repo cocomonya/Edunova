@@ -12,6 +12,7 @@ const NAV_LINKS: Record<string, { href: string; label: string }[]> = {
     { href: '/classes', label: 'Classes' },
     { href: '/notes', label: 'Notes' },
     { href: '/utilisateurs', label: 'Utilisateurs' },
+    { href: '/demandes', label: 'Demandes' },
   ],
   secretaire: [
     { href: '/tableau-de-bord', label: 'Accueil' },

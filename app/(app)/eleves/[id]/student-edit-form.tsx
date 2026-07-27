@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState } from 'react'
-import { updateStudent, type UpdateStudentState } from './actions'
+import { requestStudentUpdate, type UpdateStudentState } from './actions'
 
 interface Student {
   id: string
@@ -23,8 +23,14 @@ interface Student {
 
 const initialState: UpdateStudentState = {}
 
-export default function StudentEditForm({ student }: { student: Student }) {
-  const [state, formAction, isPending] = useActionState(updateStudent, initialState)
+export default function StudentEditForm({
+  student,
+  onDone,
+}: {
+  student: Student
+  onDone?: () => void
+}) {
+  const [state, formAction, isPending] = useActionState(requestStudentUpdate, initialState)
 
   return (
     <form action={formAction} className="space-y-5 bg-white p-6 rounded-lg border border-slate-200">
@@ -33,6 +39,11 @@ export default function StudentEditForm({ student }: { student: Student }) {
       {state.error && (
         <div className="bg-red-50 text-red-700 text-sm p-3 rounded border border-red-200">
           {state.error}
+        </div>
+      )}
+      {state.pending && (
+        <div className="bg-amber-50 text-amber-700 text-sm p-3 rounded border border-amber-200">
+          Demande envoyee au directeur pour approbation.
         </div>
       )}
       {state.success && (
@@ -127,13 +138,24 @@ export default function StudentEditForm({ student }: { student: Student }) {
         </div>
       </div>
 
-      <button
-        type="submit"
-        disabled={isPending}
-        className="w-full bg-slate-900 text-white rounded py-2 text-sm font-medium disabled:opacity-50"
-      >
-        {isPending ? 'Enregistrement...' : 'Enregistrer les modifications'}
-      </button>
+      <div className="flex gap-3">
+        <button
+          type="submit"
+          disabled={isPending}
+          className="flex-1 bg-slate-900 text-white rounded py-2 text-sm font-medium disabled:opacity-50"
+        >
+          {isPending ? 'Envoi...' : 'Enregistrer les modifications'}
+        </button>
+        {onDone && (
+          <button
+            type="button"
+            onClick={onDone}
+            className="px-4 py-2 rounded border border-slate-300 text-sm text-slate-600"
+          >
+            Annuler
+          </button>
+        )}
+      </div>
     </form>
   )
 }

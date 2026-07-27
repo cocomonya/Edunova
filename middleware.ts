@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
 const ROLE_ROUTES: Record<string, string[]> = {
-  directeur: ['/tableau-de-bord', '/eleves', '/classes', '/notes', '/finances', '/utilisateurs', '/rapports', '/parametres'],
+  directeur: ['/tableau-de-bord', '/eleves', '/classes', '/notes', '/finances', '/utilisateurs', '/rapports', '/parametres', '/demandes'],
   secretaire: ['/tableau-de-bord', '/eleves', '/classes', '/notes', '/utilisateurs', '/rapports'],
   comptable: ['/tableau-de-bord', '/finances', '/rapports'],
   enseignant: ['/tableau-de-bord', '/eleves', '/notes'],

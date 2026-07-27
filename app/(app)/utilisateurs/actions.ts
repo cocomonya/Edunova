@@ -5,6 +5,7 @@ import { z } from 'zod'
 import crypto from 'crypto'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { submitChange, type ActionResult } from '@/app/(app)/demandes/actions'
 
 const createUserSchema = z.object({
   full_name: z.string().min(1, 'Le nom complet est requis').max(150),
@@ -96,20 +97,13 @@ export async function createUserAccount(
   return { success: true, tempPassword, email: parsed.data.email }
 }
 
-export async function toggleUserActive(userId: string, isActive: boolean) {
-  const supabase = await createClient()
-
-  const { error } = await supabase
-    .from('users')
-    .update({ is_active: isActive })
-    .eq('id', userId)
-
-  if (error) {
-    return { error: 'Erreur lors de la mise a jour du statut.' }
-  }
-
-  revalidatePath('/utilisateurs')
-  return { success: true }
+export async function requestToggleActive(
+  userId: string,
+  userName: string,
+  isActive: boolean
+): Promise<ActionResult> {
+  const label = `${userName} - ${isActive ? 'Reactivation' : 'Desactivation'}`
+  return submitChange('user', userId, label, 'update', { is_active: isActive })
 }
 
 export interface ResetPasswordState {

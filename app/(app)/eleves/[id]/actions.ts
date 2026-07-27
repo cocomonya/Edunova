@@ -1,8 +1,8 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
+import { submitChange, type ActionResult } from '@/app/(app)/demandes/actions'
 
 const updateSchema = z.object({
   student_id: z.string().uuid(),
@@ -22,12 +22,9 @@ const updateSchema = z.object({
   emergency_contact_phone: z.string().max(30).optional().or(z.literal('')),
 })
 
-export interface UpdateStudentState {
-  error?: string
-  success?: boolean
-}
+export interface UpdateStudentState extends ActionResult {}
 
-export async function updateStudent(
+export async function requestStudentUpdate(
   _prevState: UpdateStudentState,
   formData: FormData
 ): Promise<UpdateStudentState> {
@@ -53,53 +50,44 @@ export async function updateStudent(
     return { error: parsed.error.issues[0]?.message ?? 'Champs invalides' }
   }
 
-  const supabase = await createClient()
   const { student_id, ...fields } = parsed.data
 
-  const { error } = await supabase
-    .from('students')
-    .update({
-      first_name: fields.first_name,
-      post_nom: fields.post_nom || null,
-      last_name: fields.last_name,
-      sexe: fields.sexe || null,
-      date_naissance: fields.date_naissance || null,
-      lieu_naissance: fields.lieu_naissance || null,
-      adresse: fields.adresse || null,
-      acte_naissance_numero: fields.acte_naissance_numero || null,
-      guardian_name: fields.guardian_name || null,
-      guardian_phone: fields.guardian_phone || null,
-      guardian_address: fields.guardian_address || null,
-      emergency_contact_name: fields.emergency_contact_name || null,
-      emergency_contact_relation: fields.emergency_contact_relation || null,
-      emergency_contact_phone: fields.emergency_contact_phone || null,
-    })
-    .eq('id', student_id)
-
-  if (error) {
-    return { error: 'Erreur lors de la mise à jour. Vérifiez vos permissions.' }
+  const payload = {
+    first_name: fields.first_name,
+    post_nom: fields.post_nom || null,
+    last_name: fields.last_name,
+    sexe: fields.sexe || null,
+    date_naissance: fields.date_naissance || null,
+    lieu_naissance: fields.lieu_naissance || null,
+    adresse: fields.adresse || null,
+    acte_naissance_numero: fields.acte_naissance_numero || null,
+    guardian_name: fields.guardian_name || null,
+    guardian_phone: fields.guardian_phone || null,
+    guardian_address: fields.guardian_address || null,
+    emergency_contact_name: fields.emergency_contact_name || null,
+    emergency_contact_relation: fields.emergency_contact_relation || null,
+    emergency_contact_phone: fields.emergency_contact_phone || null,
   }
 
-  revalidatePath('/eleves')
-  revalidatePath(`/eleves/${student_id}`)
-  return { success: true }
+  const label = `${fields.first_name} ${fields.last_name} - Modification des informations`
+
+  return submitChange('student', student_id, label, 'update', payload)
 }
 
-export async function changeStudentStatus(studentId: string, status: 'actif' | 'inactif' | 'transfere') {
-  const supabase = await createClient()
+const STATUS_LABELS: Record<string, string> = {
+  actif: 'Actif',
+  archive: 'Archive',
+  transfere: 'Transfere',
+  diplome: 'Diplome',
+}
 
-  const { error } = await supabase
-    .from('students')
-    .update({ status })
-    .eq('id', studentId)
-
-  if (error) {
-    return { error: 'Erreur lors du changement de statut.' }
-  }
-
-  revalidatePath('/eleves')
-  revalidatePath(`/eleves/${studentId}`)
-  return { success: true }
+export async function requestStudentStatusChange(
+  studentId: string,
+  studentName: string,
+  status: 'actif' | 'archive' | 'transfere' | 'diplome'
+): Promise<ActionResult> {
+  const label = `${studentName} - Statut vers "${STATUS_LABELS[status]}"`
+  return submitChange('student', studentId, label, 'update', { status })
 }
 
 export async function linkParent(studentId: string, parentId: string) {
@@ -129,7 +117,6 @@ export async function linkParent(studentId: string, parentId: string) {
     return { error: 'Erreur lors du rattachement.' }
   }
 
-  revalidatePath(`/eleves/${studentId}`)
   return { success: true }
 }
 
@@ -145,6 +132,5 @@ export async function unlinkParent(parentStudentId: string, studentId: string) {
     return { error: 'Erreur lors du detachement.' }
   }
 
-  revalidatePath(`/eleves/${studentId}`)
   return { success: true }
 }

@@ -52,7 +52,7 @@ export default async function UtilisateurDetailPage({ params }: { params: Promis
         </p>
 
         <div className="bg-white rounded-lg border border-slate-200 p-4 flex items-center gap-2 mb-6">
-          <ToggleActiveButton userId={user.id} isActive={user.is_active} />
+          <ToggleActiveButton userId={user.id} userName={user.full_name} isActive={user.is_active} />
           <ResetPasswordButton userId={user.id} />
         </div>
 

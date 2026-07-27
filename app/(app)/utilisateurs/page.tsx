@@ -18,15 +18,37 @@ export default async function UtilisateursPage() {
 
   const linkedParentIds = new Set((linkedRows ?? []).map((r) => r.parent_id))
 
-  const personnel = (users ?? []).filter((u: any) => u.roles?.slug !== 'parent')
-  const parents = (users ?? []).filter((u: any) => u.roles?.slug === 'parent')
+  const { data: pendingRows } = await supabase
+    .from('change_requests')
+    .select('target_id')
+    .eq('target_type', 'user')
+    .eq('status', 'pending')
+
+  const pendingUserIds = new Set((pendingRows ?? []).map((r) => r.target_id))
+
+  const sortByPending = (a: any, b: any) => {
+    const aPending = pendingUserIds.has(a.id) ? 0 : 1
+    const bPending = pendingUserIds.has(b.id) ? 0 : 1
+    return aPending - bPending
+  }
+
+  const personnel = (users ?? []).filter((u: any) => u.roles?.slug !== 'parent').sort(sortByPending)
+  const parents = (users ?? []).filter((u: any) => u.roles?.slug === 'parent').sort(sortByPending)
 
   function UserRow(u: any, showLinkBadge: boolean) {
+    const isPending = pendingUserIds.has(u.id)
     return (
       <Link key={u.id} href={`/utilisateurs/${u.id}`} className="block p-4 hover:bg-slate-50">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-slate-900">{u.full_name}</p>
+            <p className="text-sm font-medium text-slate-900 flex items-center gap-2">
+              {u.full_name}
+              {isPending && (
+                <span className="text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded">
+                  En attente
+                </span>
+              )}
+            </p>
             <p className="text-xs text-slate-500">{u.email} - {u.roles?.name}</p>
           </div>
           <div className="flex items-center gap-2">
