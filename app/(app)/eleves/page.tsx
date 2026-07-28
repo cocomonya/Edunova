@@ -78,15 +78,15 @@ export default async function ElevesPage({
   })
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8">
+    <div className="min-h-screen bg-slate-50 p-4 sm:p-8">
       <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-xl font-semibold text-slate-900">
+        <div className="flex items-center justify-between mb-4 gap-2">
+          <h1 className="text-lg sm:text-xl font-semibold text-slate-900 truncate">
             Eleves{currentClass ? ` - ${currentClass.niveau}${currentClass.local ? ` Local ${currentClass.local}` : ''}` : ''}
           </h1>
           <Link
             href="/eleves/nouveau"
-            className="bg-slate-900 text-white text-sm px-4 py-2 rounded font-medium"
+            className="bg-slate-900 text-white text-sm px-4 py-2 rounded font-medium shrink-0"
           >
             + Nouvel eleve
           </Link>
@@ -96,7 +96,55 @@ export default async function ElevesPage({
           <ClassFilter classes={classes ?? []} currentClasse={classe ?? ''} />
         </div>
 
-        <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+        {/* Vue mobile : cartes empilees */}
+        <div className="sm:hidden space-y-2">
+          {sortedEnrollments.map((e: any) => {
+            const status = e.students?.status
+            const isPending = pendingStudentIds.has(e.students?.id)
+            return (
+              <Link
+                key={e.id}
+                href={`/eleves/${e.students?.id}`}
+                className="block bg-white rounded-lg border border-slate-200 p-4"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-slate-900 truncate">
+                      {e.students?.first_name} {e.students?.last_name}
+                    </p>
+                    <p className="text-xs text-slate-500 mt-0.5">{e.students?.matricule}</p>
+                    <p className="text-xs text-slate-500">
+                      {e.classes?.name} ({e.classes?.niveau})
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span className={`text-xs px-2 py-0.5 rounded ${STATUS_COLORS[status] ?? 'bg-slate-100 text-slate-600'}`}>
+                      {STATUS_LABELS[status] ?? status}
+                    </span>
+                    {linkedStudentIds.has(e.students?.id) ? (
+                      <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded">Parent lie</span>
+                    ) : (
+                      <span className="text-xs bg-red-50 text-red-600 px-2 py-0.5 rounded">Non lie</span>
+                    )}
+                  </div>
+                </div>
+                {isPending && (
+                  <span className="inline-block mt-2 text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded">
+                    En attente d approbation
+                  </span>
+                )}
+              </Link>
+            )
+          })}
+          {sortedEnrollments.length === 0 && (
+            <p className="text-center text-slate-400 text-sm py-8 bg-white rounded-lg border border-slate-200">
+              Aucun eleve trouve
+            </p>
+          )}
+        </div>
+
+        {/* Vue desktop : tableau */}
+        <div className="hidden sm:block bg-white rounded-lg border border-slate-200 overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
