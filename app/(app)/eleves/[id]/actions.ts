@@ -22,7 +22,9 @@ const updateSchema = z.object({
   emergency_contact_phone: z.string().max(30).optional().or(z.literal('')),
 })
 
-export interface UpdateStudentState extends ActionResult {}
+export interface UpdateStudentState extends ActionResult {
+  fieldErrors?: Record<string, string>
+}
 
 export async function requestStudentUpdate(
   _prevState: UpdateStudentState,
@@ -47,7 +49,12 @@ export async function requestStudentUpdate(
   })
 
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? 'Champs invalides' }
+    const fieldErrors: Record<string, string> = {}
+    for (const issue of parsed.error.issues) {
+      const key = issue.path[0] as string
+      if (!fieldErrors[key]) fieldErrors[key] = issue.message
+    }
+    return { error: 'Veuillez corriger les champs en rouge ci-dessous.', fieldErrors }
   }
 
   const { student_id, ...fields } = parsed.data

@@ -23,6 +23,17 @@ interface Student {
 
 const initialState: UpdateStudentState = {}
 
+function inputClass(hasError?: boolean) {
+  return `w-full border rounded px-3 py-2 text-sm ${
+    hasError ? 'border-red-400 focus:border-red-500' : 'border-slate-300 focus:border-slate-500'
+  } outline-none`
+}
+
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null
+  return <p className="text-xs text-red-600 mt-1">{message}</p>
+}
+
 export default function StudentEditForm({
   student,
   onDone,
@@ -31,6 +42,7 @@ export default function StudentEditForm({
   onDone?: () => void
 }) {
   const [state, formAction, isPending] = useActionState(requestStudentUpdate, initialState)
+  const fieldErrors = state.fieldErrors ?? {}
 
   return (
     <form action={formAction} className="space-y-5 bg-white p-6 rounded-lg border border-slate-200">
@@ -54,95 +66,109 @@ export default function StudentEditForm({
 
       <div>
         <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Identite</h3>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Prenom *</label>
-            <input name="first_name" required defaultValue={student.first_name} className="w-full border border-slate-300 rounded px-3 py-2 text-sm" />
+            <input name="first_name" required defaultValue={student.first_name} className={inputClass(!!fieldErrors.first_name)} />
+            <FieldError message={fieldErrors.first_name} />
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Post-nom</label>
-            <input name="post_nom" defaultValue={student.post_nom ?? ''} className="w-full border border-slate-300 rounded px-3 py-2 text-sm" />
+            <input name="post_nom" defaultValue={student.post_nom ?? ''} className={inputClass(!!fieldErrors.post_nom)} />
+            <FieldError message={fieldErrors.post_nom} />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4 mt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Nom *</label>
-            <input name="last_name" required defaultValue={student.last_name} className="w-full border border-slate-300 rounded px-3 py-2 text-sm" />
+            <input name="last_name" required defaultValue={student.last_name} className={inputClass(!!fieldErrors.last_name)} />
+            <FieldError message={fieldErrors.last_name} />
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Sexe</label>
-            <select name="sexe" defaultValue={student.sexe ?? ''} className="w-full border border-slate-300 rounded px-3 py-2 text-sm">
+            <select name="sexe" defaultValue={student.sexe ?? ''} className={inputClass(!!fieldErrors.sexe)}>
               <option value="">-- Choisir --</option>
               <option value="M">Masculin</option>
               <option value="F">Feminin</option>
             </select>
+            <FieldError message={fieldErrors.sexe} />
           </div>
         </div>
       </div>
 
       <div>
         <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Naissance et adresse</h3>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Date de naissance</label>
-            <input type="date" name="date_naissance" defaultValue={student.date_naissance ?? ''} className="w-full border border-slate-300 rounded px-3 py-2 text-sm" />
+            <input type="date" name="date_naissance" defaultValue={student.date_naissance ?? ''} className={inputClass(!!fieldErrors.date_naissance)} />
+            <FieldError message={fieldErrors.date_naissance} />
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Lieu de naissance</label>
-            <input name="lieu_naissance" defaultValue={student.lieu_naissance ?? ''} className="w-full border border-slate-300 rounded px-3 py-2 text-sm" />
+            <input name="lieu_naissance" defaultValue={student.lieu_naissance ?? ''} className={inputClass(!!fieldErrors.lieu_naissance)} />
+            <FieldError message={fieldErrors.lieu_naissance} />
           </div>
         </div>
         <div className="mt-4">
           <label className="block text-sm font-medium text-slate-700 mb-1">Adresse</label>
-          <input name="adresse" defaultValue={student.adresse ?? ''} className="w-full border border-slate-300 rounded px-3 py-2 text-sm" />
+          <input name="adresse" defaultValue={student.adresse ?? ''} className={inputClass(!!fieldErrors.adresse)} />
+          <FieldError message={fieldErrors.adresse} />
         </div>
         <div className="mt-4">
           <label className="block text-sm font-medium text-slate-700 mb-1">N acte de naissance</label>
-          <input name="acte_naissance_numero" defaultValue={student.acte_naissance_numero ?? ''} className="w-full border border-slate-300 rounded px-3 py-2 text-sm" />
+          <input name="acte_naissance_numero" defaultValue={student.acte_naissance_numero ?? ''} className={inputClass(!!fieldErrors.acte_naissance_numero)} />
+          <FieldError message={fieldErrors.acte_naissance_numero} />
         </div>
       </div>
 
       <div>
         <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Tuteur</h3>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Nom du tuteur</label>
-            <input name="guardian_name" defaultValue={student.guardian_name ?? ''} className="w-full border border-slate-300 rounded px-3 py-2 text-sm" />
+            <input name="guardian_name" defaultValue={student.guardian_name ?? ''} className={inputClass(!!fieldErrors.guardian_name)} />
+            <FieldError message={fieldErrors.guardian_name} />
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Telephone tuteur</label>
-            <input name="guardian_phone" defaultValue={student.guardian_phone ?? ''} className="w-full border border-slate-300 rounded px-3 py-2 text-sm" />
+            <input name="guardian_phone" defaultValue={student.guardian_phone ?? ''} className={inputClass(!!fieldErrors.guardian_phone)} />
+            <FieldError message={fieldErrors.guardian_phone} />
           </div>
         </div>
         <div className="mt-4">
           <label className="block text-sm font-medium text-slate-700 mb-1">Adresse du tuteur</label>
-          <input name="guardian_address" defaultValue={student.guardian_address ?? ''} className="w-full border border-slate-300 rounded px-3 py-2 text-sm" />
+          <input name="guardian_address" defaultValue={student.guardian_address ?? ''} className={inputClass(!!fieldErrors.guardian_address)} />
+          <FieldError message={fieldErrors.guardian_address} />
         </div>
       </div>
 
       <div>
         <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Contact d urgence</h3>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Nom</label>
-            <input name="emergency_contact_name" defaultValue={student.emergency_contact_name ?? ''} className="w-full border border-slate-300 rounded px-3 py-2 text-sm" />
+            <input name="emergency_contact_name" defaultValue={student.emergency_contact_name ?? ''} className={inputClass(!!fieldErrors.emergency_contact_name)} />
+            <FieldError message={fieldErrors.emergency_contact_name} />
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Lien de parente</label>
-            <input name="emergency_contact_relation" defaultValue={student.emergency_contact_relation ?? ''} className="w-full border border-slate-300 rounded px-3 py-2 text-sm" />
+            <input name="emergency_contact_relation" defaultValue={student.emergency_contact_relation ?? ''} className={inputClass(!!fieldErrors.emergency_contact_relation)} />
+            <FieldError message={fieldErrors.emergency_contact_relation} />
           </div>
         </div>
         <div className="mt-4">
           <label className="block text-sm font-medium text-slate-700 mb-1">Telephone</label>
-          <input name="emergency_contact_phone" defaultValue={student.emergency_contact_phone ?? ''} className="w-full border border-slate-300 rounded px-3 py-2 text-sm" />
+          <input name="emergency_contact_phone" defaultValue={student.emergency_contact_phone ?? ''} className={inputClass(!!fieldErrors.emergency_contact_phone)} />
+          <FieldError message={fieldErrors.emergency_contact_phone} />
         </div>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex flex-col sm:flex-row gap-3">
         <button
           type="submit"
           disabled={isPending}
-          className="flex-1 bg-slate-900 text-white rounded py-2 text-sm font-medium disabled:opacity-50"
+          className="flex-1 bg-slate-900 text-white rounded py-2.5 text-sm font-medium disabled:opacity-50"
         >
           {isPending ? 'Envoi...' : 'Enregistrer les modifications'}
         </button>
@@ -150,7 +176,7 @@ export default function StudentEditForm({
           <button
             type="button"
             onClick={onDone}
-            className="px-4 py-2 rounded border border-slate-300 text-sm text-slate-600"
+            className="px-4 py-2.5 rounded border border-slate-300 text-sm text-slate-600"
           >
             Annuler
           </button>

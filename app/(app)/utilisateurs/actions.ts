@@ -15,6 +15,7 @@ const createUserSchema = z.object({
 
 export interface CreateUserState {
   error?: string
+  fieldErrors?: Record<string, string>
   success?: boolean
   tempPassword?: string
   email?: string
@@ -36,7 +37,12 @@ export async function createUserAccount(
   })
 
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? 'Champs invalides' }
+    const fieldErrors: Record<string, string> = {}
+    for (const issue of parsed.error.issues) {
+      const key = issue.path[0] as string
+      if (!fieldErrors[key]) fieldErrors[key] = issue.message
+    }
+    return { error: 'Veuillez corriger les champs en rouge ci-dessous.', fieldErrors }
   }
 
   const supabase = await createClient()
@@ -75,6 +81,9 @@ export async function createUserAccount(
   })
 
   if (authError || !authUser.user) {
+    if (authError?.message?.toLowerCase().includes('already been registered')) {
+      return { error: 'Cet email est deja utilise.', fieldErrors: { email: 'Cet email est deja utilise.' } }
+    }
     return { error: authError?.message ?? 'Erreur lors de la creation du compte' }
   }
 
