@@ -6,13 +6,17 @@ import { createClient } from '@/lib/supabase/server'
 
 export interface CreateStudentState {
   error?: string
+  fieldErrors?: Record<string, string>
   success?: boolean
+  intent?: 'list' | 'another'
 }
 
 export async function createStudent(
   _prevState: CreateStudentState,
   formData: FormData
 ): Promise<CreateStudentState> {
+  const intent = (formData.get('intent') as 'list' | 'another') || 'list'
+
   const parsed = studentSchema.safeParse({
     first_name: formData.get('first_name'),
     post_nom: formData.get('post_nom'),
@@ -32,14 +36,23 @@ export async function createStudent(
   })
 
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? 'Champs invalides' }
+    const fieldErrors: Record<string, string> = {}
+    for (const issue of parsed.error.issues) {
+      const key = issue.path[0] as string
+      if (!fieldErrors[key]) fieldErrors[key] = issue.message
+    }
+    return {
+      error: 'Veuillez corriger les champs en rouge ci-dessous.',
+      fieldErrors,
+      intent,
+    }
   }
 
   const supabase = await createClient()
 
   const { data: userData } = await supabase.auth.getUser()
   if (!userData.user) {
-    return { error: 'Non authentifié' }
+    return { error: 'Non authentifié', intent }
   }
 
   const { data: profile } = await supabase
@@ -49,7 +62,7 @@ export async function createStudent(
     .single()
 
   if (!profile) {
-    return { error: 'Profil introuvable' }
+    return { error: 'Profil introuvable', intent }
   }
 
   const { data: academicYear } = await supabase
@@ -60,7 +73,7 @@ export async function createStudent(
     .single()
 
   if (!academicYear) {
-    return { error: "Aucune année scolaire courante définie pour l'école" }
+    return { error: "Aucune année scolaire courante définie pour l'école", intent }
   }
 
   const { error } = await supabase.rpc('create_student_with_enrollment', {
@@ -84,9 +97,9 @@ export async function createStudent(
   })
 
   if (error) {
-    return { error: "Erreur lors de la création de l'élève. Vérifiez vos permissions." }
+    return { error: "Erreur lors de la création de l'élève. Vérifiez vos permissions.", intent }
   }
 
   revalidatePath('/eleves')
-  return { success: true }
+  return { success: true, intent }
 }
