@@ -21,7 +21,7 @@ export default async function NouvelElevePage() {
     .order('name')
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8">
+    <div className="min-h-screen bg-slate-50 p-4 sm:p-8">
       <div className="max-w-lg mx-auto">
         <h1 className="text-xl font-semibold text-slate-900 mb-6">Nouvel élève</h1>
         <StudentForm classes={classes ?? []} />

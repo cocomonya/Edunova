@@ -39,7 +39,7 @@ export default async function UtilisateurDetailPage({ params }: { params: Promis
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8">
+    <div className="min-h-screen bg-slate-50 p-4 sm:p-8">
       <div className="max-w-lg mx-auto">
         <div className="flex items-center justify-between mb-1">
           <h1 className="text-xl font-semibold text-slate-900">{user.full_name}</h1>

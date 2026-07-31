@@ -22,7 +22,7 @@ export default async function NotesPage() {
       .eq('teacher_id', userData.user.id)
 
     return (
-      <div className="min-h-screen bg-slate-50 p-8">
+      <div className="min-h-screen bg-slate-50 p-4 sm:p-8">
         <div className="max-w-2xl mx-auto">
           <h1 className="text-xl font-semibold text-slate-900 mb-6">Mes classes</h1>
           <div className="space-y-3">
@@ -52,7 +52,7 @@ export default async function NotesPage() {
       .eq('parent_id', userData.user.id)
 
     return (
-      <div className="min-h-screen bg-slate-50 p-8">
+      <div className="min-h-screen bg-slate-50 p-4 sm:p-8">
         <div className="max-w-2xl mx-auto">
           <h1 className="text-xl font-semibold text-slate-900 mb-6">Mes enfants</h1>
           <div className="space-y-3">
@@ -84,7 +84,7 @@ export default async function NotesPage() {
     .order('name')
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8">
+    <div className="min-h-screen bg-slate-50 p-4 sm:p-8">
       <div className="max-w-2xl mx-auto">
         <h1 className="text-xl font-semibold text-slate-900 mb-6">Notes par classe</h1>
         <div className="space-y-3">

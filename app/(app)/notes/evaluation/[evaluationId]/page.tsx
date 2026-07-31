@@ -35,7 +35,7 @@ export default async function EvaluationDetailPage({ params }: { params: Promise
     .map((s: any) => ({ ...s, existingScore: gradesMap.get(s.id) ?? null }))
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8">
+    <div className="min-h-screen bg-slate-50 p-4 sm:p-8">
       <div className="max-w-lg mx-auto">
         <h1 className="text-xl font-semibold text-slate-900 mb-1">{evaluation.title}</h1>
         <p className="text-sm text-slate-500 mb-6">
