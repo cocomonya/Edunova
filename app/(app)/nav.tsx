@@ -11,6 +11,7 @@ const NAV_LINKS: Record<string, { href: string; label: string }[]> = {
     { href: '/eleves', label: 'Eleves' },
     { href: '/classes', label: 'Classes' },
     { href: '/notes', label: 'Notes' },
+    { href: '/matieres', label: 'Matieres' },
     { href: '/utilisateurs', label: 'Utilisateurs' },
     { href: '/demandes', label: 'Demandes' },
   ],
@@ -19,6 +20,7 @@ const NAV_LINKS: Record<string, { href: string; label: string }[]> = {
     { href: '/eleves', label: 'Eleves' },
     { href: '/classes', label: 'Classes' },
     { href: '/notes', label: 'Notes' },
+    { href: '/matieres', label: 'Matieres' },
     { href: '/utilisateurs', label: 'Utilisateurs' },
   ],
   comptable: [
