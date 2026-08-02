@@ -11,7 +11,7 @@ export default async function UtilisateurDetailPage({ params }: { params: Promis
 
   const { data: user } = await supabase
     .from('users')
-    .select('id, full_name, email, is_active, created_at, roles ( slug, name )')
+    .select('id, full_name, email, is_active, created_at, school_id, roles ( slug, name )')
     .eq('id', id)
     .single()
 
@@ -21,13 +21,37 @@ export default async function UtilisateurDetailPage({ params }: { params: Promis
 
   let assignments: any[] = []
   let children: any[] = []
+  let totalHours = 0
 
   if (roleSlug === 'enseignant') {
+    const { data: academicYear } = await supabase
+      .from('academic_years')
+      .select('id')
+      .eq('school_id', user.school_id)
+      .eq('is_current', true)
+      .single()
+
     const { data } = await supabase
       .from('teacher_assignments')
-      .select('id, classes ( niveau, local ), subjects ( name )')
+      .select('id, class_id, subject_id, classes ( niveau, local ), subjects ( name )')
       .eq('teacher_id', id)
     assignments = data ?? []
+
+    if (academicYear && assignments.length > 0) {
+      const { data: hoursData } = await supabase
+        .from('class_subjects')
+        .select('class_id, subject_id, hours_per_week')
+        .eq('academic_year_id', academicYear.id)
+
+      const hoursMap = new Map(
+        (hoursData ?? []).map((h) => [`${h.class_id}_${h.subject_id}`, h.hours_per_week])
+      )
+
+      totalHours = assignments.reduce((sum, a: any) => {
+        const hours = hoursMap.get(`${a.class_id}_${a.subject_id}`) ?? 0
+        return sum + hours
+      }, 0)
+    }
   }
 
   if (roleSlug === 'parent') {
@@ -58,9 +82,14 @@ export default async function UtilisateurDetailPage({ params }: { params: Promis
 
         {roleSlug === 'enseignant' && (
           <>
-            <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">
-              Classes assignees
-            </h2>
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
+                Classes assignees
+              </h2>
+              <span className="text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded font-medium">
+                {totalHours} h/semaine
+              </span>
+            </div>
             <div className="bg-white rounded-lg border border-slate-200 divide-y divide-slate-100">
               {assignments.map((a: any) => (
                 <div key={a.id} className="p-4">
