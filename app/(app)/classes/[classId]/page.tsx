@@ -17,11 +17,19 @@ export default async function ClasseDetailPage({ params }: { params: Promise<{ c
 
   if (!classe) notFound()
 
-  const { data: subjects } = await supabase
+  const { data: allSubjects } = await supabase
     .from('subjects')
     .select('id, name')
     .eq('school_id', classe.school_id)
+    .eq('is_active', true)
     .order('name')
+
+  const { data: classSubjectsData } = await supabase
+    .from('class_subjects')
+    .select('id, subject_id, hours_per_week, coefficient, is_optional, subjects ( name )')
+    .eq('class_id', classId)
+    .eq('academic_year_id', classe.academic_year_id)
+    .order('created_at')
 
   const { data: assignments } = await supabase
     .from('teacher_assignments')
@@ -36,7 +44,22 @@ export default async function ClasseDetailPage({ params }: { params: Promise<{ c
     .eq('roles.slug', 'enseignant')
     .eq('is_active', true)
 
-  const assignmentMap = new Map((assignments ?? []).map((a) => [a.subject_id, a.teacher_id]))
+  const teacherBySubject = new Map((assignments ?? []).map((a) => [a.subject_id, a.teacher_id]))
+
+  const classSubjects = (classSubjectsData ?? []).map((cs: any) => ({
+    id: cs.id,
+    subject_id: cs.subject_id,
+    subject_name: cs.subjects?.name ?? 'Matiere inconnue',
+    hours_per_week: cs.hours_per_week,
+    coefficient: cs.coefficient,
+    is_optional: cs.is_optional,
+    teacher_id: teacherBySubject.get(cs.subject_id) ?? null,
+  }))
+
+  const attachedSubjectIds = new Set(classSubjects.map((cs) => cs.subject_id))
+  const availableSubjects = (allSubjects ?? []).filter((s) => !attachedSubjectIds.has(s.id))
+
+  const totalHours = classSubjects.reduce((sum, cs) => sum + (cs.hours_per_week ?? 0), 0)
 
   return (
     <div className="min-h-screen bg-slate-50 p-4 sm:p-8">
@@ -55,15 +78,18 @@ export default async function ClasseDetailPage({ params }: { params: Promise<{ c
           Voir les eleves de cette classe
         </Link>
 
-        <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">
-          Enseignants par matiere
-        </h2>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
+            Matieres, volume horaire et enseignants
+          </h2>
+          <span className="text-xs text-slate-400">{totalHours} h/semaine au total</span>
+        </div>
         <AssignmentsClient
           classId={classId}
           academicYearId={classe.academic_year_id}
-          subjects={subjects ?? []}
+          classSubjects={classSubjects}
+          availableSubjects={availableSubjects}
           teachers={(teachers ?? []).map((t: any) => ({ id: t.id, full_name: t.full_name }))}
-          assignmentMap={Object.fromEntries(assignmentMap)}
         />
       </div>
     </div>
