@@ -2,7 +2,6 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
 
 export interface ActionResult {
   error?: string
@@ -94,26 +93,25 @@ async function executeChange(
   actionType: 'update' | 'delete',
   payload: Record<string, any> | null
 ): Promise<ActionResult> {
+  // NOTE (audit MVP) : la suppression reelle d'un eleve ou d'un utilisateur
+  // n'est plus une action produit valide depuis l'introduction de l'archivage
+  // (eleves) et de la desactivation (utilisateurs). Ce chemin n'a plus aucun
+  // appelant dans l'application. On le neutralise explicitement plutot que de
+  // le supprimer, pour qu'une regression future ne puisse pas le reactiver
+  // silencieusement et executer une suppression irreversible.
+  if (actionType === 'delete') {
+    return { error: 'La suppression reelle est desactivee. Utilisez l archivage ou la desactivation.' }
+  }
+
   const supabase = await createClient()
 
   if (targetType === 'student') {
-    if (actionType === 'delete') {
-      const { error } = await supabase.from('students').delete().eq('id', targetId)
-      if (error) return { error: 'Erreur lors de la suppression.' }
-      return { success: true }
-    }
     const { error } = await supabase.from('students').update(payload ?? {}).eq('id', targetId)
     if (error) return { error: 'Erreur lors de la modification.' }
     return { success: true }
   }
 
   if (targetType === 'user') {
-    if (actionType === 'delete') {
-      const admin = createAdminClient()
-      const { error } = await admin.auth.admin.deleteUser(targetId)
-      if (error) return { error: 'Erreur lors de la suppression.' }
-      return { success: true }
-    }
     const { error } = await supabase.from('users').update(payload ?? {}).eq('id', targetId)
     if (error) return { error: 'Erreur lors de la modification.' }
     return { success: true }
